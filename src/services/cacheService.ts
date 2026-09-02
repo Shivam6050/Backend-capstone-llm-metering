@@ -170,6 +170,25 @@ class CacheService {
     await this.fallback.delPattern(pattern);
   }
 
+  delSync(key: string): void {
+    try {
+      (this.fallback as any).store.delete(key);
+    } catch { /* ignore */ }
+    this.del(key).catch(() => {});
+  }
+
+  delPatternSync(pattern: string): void {
+    try {
+      const store = (this.fallback as any).store;
+      if (store && store.keys) {
+        for (const k of Array.from(store.keys() as Iterable<string>)) {
+          if (k.includes(pattern)) store.delete(k);
+        }
+      }
+    } catch { /* ignore */ }
+    this.delPattern(pattern).catch(() => {});
+  }
+
   // Legacy synchronous API (backward compatibility with existing routes)
   getSync_legacy(key: string): any {
     return this.getSync(key);
@@ -183,16 +202,16 @@ const cacheServiceInstance = new CacheService();
 export const cacheService = {
   get: (key: string) => cacheServiceInstance.getSync(key),
   set: (key: string, value: any, ttlSeconds?: number) => {
-    cacheServiceInstance.set(key, value, ttlSeconds);
+    cacheServiceInstance.set(key, value, ttlSeconds || 2);
   },
   del: (key: string) => {
-    cacheServiceInstance.del(key);
+    cacheServiceInstance.delSync(key);
   },
   delPattern: (pattern: string) => {
-    cacheServiceInstance.delPattern(pattern);
+    cacheServiceInstance.delPatternSync(pattern);
   },
   clear: () => {
-    cacheServiceInstance.del('*');
+    cacheServiceInstance.delPatternSync('');
   },
 };
 

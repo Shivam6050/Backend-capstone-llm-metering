@@ -90,7 +90,7 @@ export function App() {
   const fetchUserSubscriptions = async (currency: string = 'USD') => {
     setLoadingSubs(true);
     try {
-      const res = await fetch(`/api/v1/user/subscriptions?currency=${currency}`);
+      const res = await fetch(`/api/v1/user/subscriptions?currency=${currency}&_t=${Date.now()}`, { cache: 'no-store' });
       if (res.headers.get('content-type')?.includes('application/json')) {
         const data = await res.json();
         if (res.ok && data.success) {
