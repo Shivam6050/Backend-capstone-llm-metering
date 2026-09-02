@@ -67,10 +67,14 @@ export function App() {
   const checkSession = async () => {
     try {
       const res = await fetch('/api/v1/auth/me');
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setUser(data.user);
-        fetchUserSubscriptions(currentCurrency);
+      if (res.headers.get('content-type')?.includes('application/json')) {
+        const data = await res.json();
+        if (res.ok && data.success) {
+          setUser(data.user);
+          fetchUserSubscriptions(currentCurrency);
+        } else {
+          setUser(null);
+        }
       } else {
         setUser(null);
       }
@@ -83,9 +87,11 @@ export function App() {
     setLoadingSubs(true);
     try {
       const res = await fetch(`/api/v1/user/subscriptions?currency=${currency}`);
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setSubsData(data.data);
+      if (res.headers.get('content-type')?.includes('application/json')) {
+        const data = await res.json();
+        if (res.ok && data.success) {
+          setSubsData(data.data);
+        }
       }
     } catch (err) {
       console.error('Error fetching subscriptions:', err);
@@ -139,7 +145,13 @@ export function App() {
         }),
       });
 
-      const body = await res.json();
+      let body: any = {};
+      if (res.headers.get('content-type')?.includes('application/json')) {
+        body = await res.json();
+      } else {
+        const text = await res.text();
+        body = { success: false, message: text || `Server error (${res.status}).` };
+      }
       setLastResponse({ status: res.status, body });
       await fetchUserSubscriptions(currentCurrency);
       return body;
@@ -169,9 +181,11 @@ export function App() {
     setSyncingSubs(true);
     try {
       const res = await fetch('/api/v1/user/subscriptions/sync-all', { method: 'POST' });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        await fetchUserSubscriptions(currentCurrency);
+      if (res.headers.get('content-type')?.includes('application/json')) {
+        const data = await res.json();
+        if (res.ok && data.success) {
+          await fetchUserSubscriptions(currentCurrency);
+        }
       }
     } catch (err) {
       console.error('Sync all error:', err);
@@ -183,11 +197,13 @@ export function App() {
   const handleSyncSingle = async (subId: string) => {
     try {
       const res = await fetch(`/api/v1/user/subscriptions/${subId}/sync`, { method: 'POST' });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        await fetchUserSubscriptions(currentCurrency);
-      } else {
-        alert(data.message || 'Sync failed');
+      if (res.headers.get('content-type')?.includes('application/json')) {
+        const data = await res.json();
+        if (res.ok && data.success) {
+          await fetchUserSubscriptions(currentCurrency);
+        } else {
+          alert(data.message || 'Sync failed');
+        }
       }
     } catch (err: any) {
       alert(`Sync error: ${err.message}`);

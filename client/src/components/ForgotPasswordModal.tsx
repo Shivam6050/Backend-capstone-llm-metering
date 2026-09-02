@@ -30,7 +30,15 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({ isOpen
         body: JSON.stringify({ email }),
       });
 
-      const data = await res.json();
+      let data: any = {};
+      const contentType = res.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        try { data = await res.json(); } catch { data = { message: 'Invalid JSON response.' }; }
+      } else {
+        const text = await res.text();
+        data = { message: text && text.length < 150 ? text : `Server error (${res.status}).` };
+      }
+
       if (res.ok && data.success) {
         setMessage('Password reset instructions have been sent to your email. Check your inbox.');
         setStep(2);
@@ -56,7 +64,15 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({ isOpen
         body: JSON.stringify({ token, newPassword }),
       });
 
-      const data = await res.json();
+      let data: any = {};
+      const contentType = res.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        try { data = await res.json(); } catch { data = { message: 'Invalid JSON response.' }; }
+      } else {
+        const text = await res.text();
+        data = { message: text && text.length < 150 ? text : `Server error (${res.status}).` };
+      }
+
       if (res.ok && data.success) {
         alert('Password updated successfully! You can now sign in with your new password.');
         onClose();

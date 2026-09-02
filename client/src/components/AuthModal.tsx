@@ -38,7 +38,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         body: JSON.stringify(bodyPayload),
       });
 
-      const data = await res.json();
+      let data: any = {};
+      const contentType = res.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        try {
+          data = await res.json();
+        } catch {
+          data = { message: 'Invalid JSON response from server.' };
+        }
+      } else {
+        const text = await res.text();
+        data = { message: text && text.length < 150 ? text : `Server error (${res.status}). Please check Vercel environment variables & database connection.` };
+      }
+
       if (res.ok && data.success) {
         onLoginSuccess(data.user);
         onClose();
