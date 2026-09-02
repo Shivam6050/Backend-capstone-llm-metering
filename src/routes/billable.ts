@@ -68,10 +68,19 @@ async function handleBillableAction(req: AuthenticatedRequest, res: Response) {
   if (userToken && result.statusCode === 200 && !result.isDuplicate) {
     const userPayload = verifyToken(userToken);
     if (userPayload) {
+      const targetProvider = provider.toLowerCase();
+      const providerAliases = [
+        targetProvider,
+        targetProvider === 'gemini' ? 'google' : '',
+        targetProvider === 'google' ? 'gemini' : '',
+        targetProvider === 'claude' ? 'anthropic' : '',
+        targetProvider === 'anthropic' ? 'claude' : '',
+      ].filter(Boolean);
+
       const userSub = await prisma.userSubscription.findFirst({
         where: {
           userId: userPayload.userId,
-          providerId: provider.toLowerCase(),
+          providerId: { in: providerAliases },
         },
       });
 
@@ -82,6 +91,8 @@ async function handleBillableAction(req: AuthenticatedRequest, res: Response) {
           data: {
             tokensUsed: userSub.tokensUsed + tokensToAdd,
             apiCallsUsed: userSub.apiCallsUsed + 1,
+            syncStatus: 'SYNCED',
+            lastSyncedAt: new Date(),
           },
         });
         cacheService.delPattern(`user_subs_${userPayload.userId}`);

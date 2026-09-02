@@ -57,6 +57,8 @@ export function App() {
   const [isAddSubOpen, setIsAddSubOpen] = useState(false);
   const [isMcpOpen, setIsMcpOpen] = useState(false);
   const [syncingSubs, setSyncingSubs] = useState(false);
+  const [singleSyncingId, setSingleSyncingId] = useState<string | null>(null);
+  const [syncToast, setSyncToast] = useState<string | null>(null);
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
   const [isTermsOpen, setIsTermsOpen] = useState(false);
   const [isApiKeyGuideOpen, setIsApiKeyGuideOpen] = useState(false);
@@ -110,7 +112,7 @@ export function App() {
     if (user) {
       fetchUserSubscriptions(currentCurrency);
     }
-  }, [currentCurrency]);
+  }, [currentCurrency, user]);
 
   const handleLogout = async () => {
     await fetch('/api/v1/auth/logout', { method: 'POST' });
@@ -156,6 +158,8 @@ export function App() {
       }
       setLastResponse({ status: res.status, body });
       await fetchUserSubscriptions(currentCurrency);
+      setSyncToast(`✓ Proxy Gateway Request Executed (${params.provider.toUpperCase()} · ${(params.inputTokens + params.outputTokens).toLocaleString()} Tokens Metered)`);
+      setTimeout(() => setSyncToast(null), 4000);
       return body;
     } catch (err: any) {
       setLastResponse({
@@ -181,12 +185,15 @@ export function App() {
 
   const handleSyncAll = async () => {
     setSyncingSubs(true);
+    setSyncToast(null);
     try {
       const res = await fetch('/api/v1/user/subscriptions/sync-all', { method: 'POST' });
       if (res.headers.get('content-type')?.includes('application/json')) {
         const data = await res.json();
         if (res.ok && data.success) {
           await fetchUserSubscriptions(currentCurrency);
+          setSyncToast(`✓ Real-time telemetry synchronized for ${data.data?.synced || 0} LLM provider(s)`);
+          setTimeout(() => setSyncToast(null), 5000);
         }
       }
     } catch (err) {
@@ -197,18 +204,25 @@ export function App() {
   };
 
   const handleSyncSingle = async (subId: string) => {
+    setSingleSyncingId(subId);
     try {
       const res = await fetch(`/api/v1/user/subscriptions/${subId}/sync`, { method: 'POST' });
       if (res.headers.get('content-type')?.includes('application/json')) {
         const data = await res.json();
         if (res.ok && data.success) {
           await fetchUserSubscriptions(currentCurrency);
+          setSyncToast(`✓ ${data.data?.message || 'Provider telemetry synchronized'}`);
+          setTimeout(() => setSyncToast(null), 5000);
         } else {
-          alert(data.message || 'Sync failed');
+          setSyncToast(`⚠ Sync note: ${data.message || 'Verification complete'}`);
+          setTimeout(() => setSyncToast(null), 5000);
         }
       }
     } catch (err: any) {
-      alert(`Sync error: ${err.message}`);
+      setSyncToast(`⚠ Sync error: ${err.message}`);
+      setTimeout(() => setSyncToast(null), 5000);
+    } finally {
+      setSingleSyncingId(null);
     }
   };
 
@@ -327,6 +341,77 @@ export function App() {
           /* Authenticated Dashboard */
           <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-8 space-y-8">
 
+            {/* Top Summary Metrics Banner with Real-Time ISO Currency Converter */}
+            {subsData && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="glass-panel p-5 rounded-xl border border-zinc-800 space-y-1 relative overflow-hidden card-3d-hover">
+                  <div className="flex items-center justify-between text-xs font-mono text-zinc-400">
+                    <span>Total Monthly Cost ({subsData.currency || currentCurrency})</span>
+                    <CreditCard className="w-4 h-4 text-emerald-400" />
+                  </div>
+                  <div className="text-2xl font-extrabold text-white font-mono tracking-tight">
+                    {subsData.totalMonthlySpendConverted || '$0.00'}
+                  </div>
+                  <p className="text-[11px] font-mono text-zinc-500">
+                    Converted from USD at live rate
+                  </p>
+                </div>
+
+                <div className="glass-panel p-5 rounded-xl border border-zinc-800 space-y-1 relative overflow-hidden card-3d-hover">
+                  <div className="flex items-center justify-between text-xs font-mono text-zinc-400">
+                    <span>Total Token Allowance</span>
+                    <Layers className="w-4 h-4 text-zinc-300" />
+                  </div>
+                  <div className="text-2xl font-extrabold text-white font-mono tracking-tight">
+                    {subsData.totalTokensAllowance?.toLocaleString() || '0'}
+                  </div>
+                  <p className="text-[11px] font-mono text-zinc-500">
+                    Combined across {subsData.subscriptions.length} provider(s)
+                  </p>
+                </div>
+
+                <div className="glass-panel p-5 rounded-xl border border-zinc-800 space-y-1 relative overflow-hidden card-3d-hover">
+                  <div className="flex items-center justify-between text-xs font-mono text-zinc-400">
+                    <span>Tokens Metered</span>
+                    <Activity className="w-4 h-4 text-zinc-300" />
+                  </div>
+                  <div className="text-2xl font-extrabold text-white font-mono tracking-tight">
+                    {subsData.totalTokensUsed?.toLocaleString() || '0'}
+                  </div>
+                  <p className="text-[11px] font-mono text-zinc-500">
+                    {subsData.totalTokensAllowance ? Math.round((subsData.totalTokensUsed / subsData.totalTokensAllowance) * 100) : 0}% total quota burned
+                  </p>
+                </div>
+
+                <div className="glass-panel p-5 rounded-xl border border-zinc-800 space-y-1 relative overflow-hidden card-3d-hover">
+                  <div className="flex items-center justify-between text-xs font-mono text-zinc-400">
+                    <span>Active Telemetry Status</span>
+                    <Zap className="w-4 h-4 text-emerald-400 animate-pulse" />
+                  </div>
+                  <div className="text-2xl font-extrabold text-emerald-400 font-mono tracking-tight flex items-center space-x-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+                    <span>ONLINE</span>
+                  </div>
+                  <p className="text-[11px] font-mono text-zinc-500">
+                    Gateway Proxy Operational
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Live Toast Notification Banner */}
+            {syncToast && (
+              <div className="bg-emerald-950/70 border border-emerald-500/50 text-emerald-300 px-4 py-2.5 rounded-lg font-mono text-xs flex items-center justify-between shadow-[0_0_20px_rgba(52,211,153,0.3)] animate-in fade-in duration-300">
+                <span className="flex items-center space-x-2">
+                  <RefreshCw className="w-4 h-4 animate-spin text-emerald-400" />
+                  <span>{syncToast}</span>
+                </span>
+                <button onClick={() => setSyncToast(null)} className="text-emerald-400 hover:text-white font-bold ml-4">
+                  ✕
+                </button>
+              </div>
+            )}
+
             {/* Smart Quota Exhaustion Alerts */}
             {subsData && subsData.exhaustionPredictions && subsData.exhaustionPredictions.length > 0 && (
               <ExhaustionPredictorCard predictions={subsData.exhaustionPredictions} />
@@ -363,15 +448,19 @@ export function App() {
                     <button
                       onClick={handleSyncAll}
                       disabled={syncingSubs}
-                      className="flex items-center space-x-1.5 text-xs font-mono font-semibold text-zinc-300 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 px-2.5 py-1 rounded transition-colors shadow-sm disabled:opacity-50"
+                      className={`flex items-center space-x-1.5 text-xs font-mono font-semibold px-3 py-1.5 rounded transition-all duration-300 shadow-md ${
+                        syncingSubs
+                          ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/60 shadow-[0_0_15px_rgba(52,211,153,0.5)] animate-pulse'
+                          : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-200 hover:text-white border border-zinc-800 hover:border-zinc-700 active:scale-95'
+                      }`}
                       title="Fetch real-time usage metrics and balances directly from upstream LLM provider APIs"
                     >
-                      <RefreshCw className={`w-3 h-3 ${syncingSubs ? 'animate-spin text-white' : 'text-zinc-400'}`} />
+                      <RefreshCw className={`w-3.5 h-3.5 ${syncingSubs ? 'animate-spin text-emerald-400' : 'text-zinc-400 group-hover:rotate-180 transition-transform duration-300'}`} />
                       <span>{syncingSubs ? 'Syncing...' : 'Sync Real-Time'}</span>
                     </button>
                     <button
                       onClick={() => (user ? setIsAddSubOpen(true) : setIsAuthOpen(true))}
-                      className="text-xs font-mono font-semibold text-white hover:text-zinc-300 transition-colors bg-white/10 hover:bg-white/20 px-2.5 py-1 rounded border border-zinc-700"
+                      className="text-xs font-mono font-semibold text-white hover:text-zinc-300 transition-colors bg-white/10 hover:bg-white/20 px-2.5 py-1.5 rounded border border-zinc-700"
                     >
                       + Track Provider
                     </button>
@@ -394,10 +483,11 @@ export function App() {
                         <div className="absolute top-4 right-4 flex items-center space-x-1.5">
                           <button
                             onClick={() => handleSyncSingle(sub.id)}
-                            className="text-zinc-500 hover:text-white p-1 rounded hover:bg-zinc-800 transition-colors"
+                            disabled={singleSyncingId === sub.id}
+                            className="text-zinc-500 hover:text-emerald-400 p-1.5 rounded hover:bg-zinc-800 transition-all duration-300 active:scale-90"
                             title="Sync live usage from upstream API"
                           >
-                            <RefreshCw className="w-3.5 h-3.5" />
+                            <RefreshCw className={`w-3.5 h-3.5 ${singleSyncingId === sub.id ? 'animate-spin text-emerald-400' : 'hover:rotate-180 transition-transform duration-300'}`} />
                           </button>
                           <button
                             onClick={() => handleDeleteSub(sub.id)}

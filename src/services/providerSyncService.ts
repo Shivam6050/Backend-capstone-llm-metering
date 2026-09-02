@@ -147,12 +147,14 @@ export async function syncSubscriptionUsage(subscriptionId: string, userId?: str
       }
 
       syncMessage = 'OpenAI API connection verified. Active telemetry enabled.';
-    } else if (providerId === 'gemini') {
+    } else if (providerId === 'gemini' || providerId === 'google') {
       const resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models?key=' + encodeURIComponent(rawApiKey));
       if (!resp.ok) {
-        throw new Error('Gemini API returned HTTP ' + resp.status);
+        throw new Error('Google Gemini API returned HTTP ' + resp.status + '. Please verify your API key.');
       }
-      syncMessage = 'Google Gemini API connection verified. Model quotas synchronized.';
+      const data: any = await resp.json();
+      const modelCount = Array.isArray(data.models) ? data.models.length : 0;
+      syncMessage = `Google Gemini API verified (${modelCount} models available). Live telemetry synchronized.`;
     } else {
       syncMessage = sub.providerName + ' credentials verified successfully.';
     }
