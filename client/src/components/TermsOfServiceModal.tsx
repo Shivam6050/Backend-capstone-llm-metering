@@ -29,12 +29,12 @@ export const TermsOfServiceModal: React.FC<TermsOfServiceModalProps> = ({ isOpen
 
           <section>
             <h3 className="text-sm font-bold text-white mb-2">1. Acceptance of Terms</h3>
-            <p>By creating an account and using FlyRank AI ("Service"), you agree to be bound by these Terms of Service. If you do not agree, do not use the Service.</p>
+            <p>By creating an account and using LLM Meter ("Service"), you agree to be bound by these Terms of Service. If you do not agree, do not use the Service.</p>
           </section>
 
           <section>
             <h3 className="text-sm font-bold text-white mb-2">2. Description of Service</h3>
-            <p>FlyRank AI provides an API token billing and subscription tracking platform that allows users to monitor usage, costs, and quota consumption across multiple AI LLM providers. We do not provide AI generation services directly — we track and meter usage made through our gateway.</p>
+            <p>LLM Meter provides an API token billing and subscription tracking platform that allows users to monitor usage, costs, and quota consumption across multiple AI LLM providers. We do not provide AI generation services directly — we track and meter usage made through our gateway.</p>
           </section>
 
           <section>
@@ -67,12 +67,12 @@ export const TermsOfServiceModal: React.FC<TermsOfServiceModalProps> = ({ isOpen
 
           <section>
             <h3 className="text-sm font-bold text-white mb-2">6. Intellectual Property</h3>
-            <p>The FlyRank AI platform, including its software, design, and content, is owned by FlyRank AI and protected by copyright and intellectual property laws. You retain all rights to the data you enter into the platform.</p>
+            <p>The LLM Meter platform, including its software, design, and content, is owned by LLM Meter and protected by copyright and intellectual property laws. You retain all rights to the data you enter into the platform.</p>
           </section>
 
           <section>
             <h3 className="text-sm font-bold text-white mb-2">7. Limitation of Liability</h3>
-            <p>To the maximum extent permitted by law, FlyRank AI shall not be liable for any indirect, incidental, special, or consequential damages. Our total liability shall not exceed the amount paid by you in the 12 months prior to the claim.</p>
+            <p>To the maximum extent permitted by law, LLM Meter shall not be liable for any indirect, incidental, special, or consequential damages. Our total liability shall not exceed the amount paid by you in the 12 months prior to the claim.</p>
           </section>
 
           <section>
@@ -82,7 +82,7 @@ export const TermsOfServiceModal: React.FC<TermsOfServiceModalProps> = ({ isOpen
 
           <section>
             <h3 className="text-sm font-bold text-white mb-2">9. Governing Law</h3>
-            <p>These terms are governed by applicable law. Disputes shall be resolved through binding arbitration or the courts of the jurisdiction where FlyRank AI operates.</p>
+            <p>These terms are governed by applicable law. Disputes shall be resolved through binding arbitration or the courts of the jurisdiction where LLM Meter operates.</p>
           </section>
 
           <section>

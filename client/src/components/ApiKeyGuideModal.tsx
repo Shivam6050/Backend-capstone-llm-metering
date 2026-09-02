@@ -32,7 +32,7 @@ const PROVIDER_GUIDES: ProviderGuide[] = [
       'Sign in or register your OpenAI developer account.',
       'Click the "+ Create new secret key" button in the API keys tab.',
       'Assign a descriptive name (e.g., "FlyRank Gateway") and copy the secret key starting with sk-.',
-      'Paste the key in FlyRank AI to enable live real-time model quota telemetry.',
+      'Paste the key in LLM Meter to enable live real-time model quota telemetry.',
     ],
     tips: 'Set hard spending limits in OpenAI Billing > Usage Limits to prevent unexpected overages.',
   },
@@ -47,7 +47,7 @@ const PROVIDER_GUIDES: ProviderGuide[] = [
       'Log in with your Anthropic developer account.',
       'Select your target Workspace and click "Create Key".',
       'Give your key a name and copy the secret string starting with sk-ant-.',
-      'Paste it into FlyRank AI for encrypted telemetry and cost analysis.',
+      'Paste it into LLM Meter for encrypted telemetry and cost analysis.',
     ],
     tips: 'Anthropic recommends creating dedicated API keys per environment (Development vs Production).',
   },
@@ -62,7 +62,7 @@ const PROVIDER_GUIDES: ProviderGuide[] = [
       'Sign in with your Google or GitHub account.',
       'Click "Create API Key" and specify a key label.',
       'Copy your Groq API key starting with gsk_.',
-      'Paste into FlyRank AI to track live remaining token capacity per minute.',
+      'Paste into LLM Meter to track live remaining token capacity per minute.',
     ],
     tips: 'Groq provides generous free tier rate limits. FlyRank auto-syncs remaining token quotas in real time.',
   },
@@ -76,7 +76,7 @@ const PROVIDER_GUIDES: ProviderGuide[] = [
       'Access DeepSeek Platform at platform.deepseek.com/api_keys.',
       'Log in to your DeepSeek account.',
       'Click "Create API key" and copy the secret token.',
-      'Paste into FlyRank AI to activate live balance monitoring.',
+      'Paste into LLM Meter to activate live balance monitoring.',
     ],
     tips: 'FlyRank queries DeepSeek User Balance API to display your exact remaining USD account credit.',
   },
@@ -91,7 +91,7 @@ const PROVIDER_GUIDES: ProviderGuide[] = [
       'Sign in with your Google Account.',
       'Click "Create API key" and select an existing GCP project or create a new one.',
       'Copy the API key starting with AIzaSy.',
-      'Paste into FlyRank AI to synchronize model availability.',
+      'Paste into LLM Meter to synchronize model availability.',
     ],
     tips: 'Free tier keys in Google AI Studio have per-minute quotas. FlyRank helps you avoid rate-limit errors.',
   },
@@ -106,7 +106,7 @@ const PROVIDER_GUIDES: ProviderGuide[] = [
       'Sign in and click "Create Key".',
       'Set an optional credit limit for the key.',
       'Copy the key starting with sk-or-.',
-      'Paste into FlyRank AI for unified multi-provider balance sync.',
+      'Paste into LLM Meter for unified multi-provider balance sync.',
     ],
     tips: 'OpenRouter allows setting per-key credit limits to strictly cap your maximum potential spend.',
   },
@@ -282,7 +282,7 @@ export const ApiKeyGuideModal: React.FC<ApiKeyGuideModalProps> = ({
                   <span>Zero Third-Party Sharing</span>
                 </div>
                 <p className="text-zinc-400 text-[11px]">
-                  Your keys are exclusively used to query official upstream provider APIs for live balance & quota telemetry. FlyRank AI never sells or shares your keys with third parties.
+                  Your keys are exclusively used to query official upstream provider APIs for live balance & quota telemetry. LLM Meter never sells or shares your keys with third parties.
                 </p>
               </div>
             </div>

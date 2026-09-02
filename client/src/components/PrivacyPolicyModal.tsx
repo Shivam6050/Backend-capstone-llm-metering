@@ -29,7 +29,7 @@ export const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({ isOpen, 
 
           <section>
             <h3 className="text-sm font-bold text-white mb-2">1. Who We Are</h3>
-            <p>FlyRank AI ("we", "us", "our") operates the FlyRank AI token billing and subscription management platform. We are committed to protecting your personal data and complying with applicable privacy laws including GDPR (EU) and applicable US state privacy laws.</p>
+            <p>LLM Meter ("we", "us", "our") operates the LLM Meter token billing and subscription management platform. We are committed to protecting your personal data and complying with applicable privacy laws including GDPR (EU) and applicable US state privacy laws.</p>
           </section>
 
           <section>

@@ -34,7 +34,7 @@ export const Header: React.FC<HeaderProps> = ({
             <div>
               <div className="flex items-center space-x-2">
                 <span className="text-base sm:text-lg font-bold tracking-tight text-white">
-                  FlyRank <span className="text-zinc-400 font-normal">AI Gateway</span>
+                  LLM Meter
                 </span>
                 <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-zinc-900 text-zinc-300 border border-zinc-700">
                   <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 mr-1 animate-pulse"></span>

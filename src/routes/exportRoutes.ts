@@ -114,7 +114,7 @@ exportRouter.get('/invoice', requireUserAuth, async (req: UserAuthenticatedReque
     doc.rect(0, 0, 595.28, 110).fill('#18181b');
 
     // Title / Logo Text
-    doc.fillColor('#ffffff').fontSize(20).font('Helvetica-Bold').text('FLYRANK AI', 40, 32);
+    doc.fillColor('#ffffff').fontSize(20).font('Helvetica-Bold').text('LLM METER', 40, 32);
     doc.fillColor('#a1a1aa').fontSize(10).font('Helvetica').text('LLM Metering & Unified Billing Engine', 40, 58);
     doc.fillColor('#71717a').fontSize(8).font('Helvetica').text('https://backend-capstone-llm-metering.vercel.app', 40, 74);
 
