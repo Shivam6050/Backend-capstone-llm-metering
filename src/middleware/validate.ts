@@ -13,10 +13,11 @@ export const validateRequest = (schema: AnyZodObject) => {
       return next();
     } catch (error) {
       if (error instanceof ZodError) {
+        const firstMessage = error.errors[0]?.message || 'Invalid request payload or parameters';
         return res.status(400).json({
           success: false,
           error: 'VALIDATION_ERROR',
-          message: 'Invalid request payload or parameters',
+          message: firstMessage,
           details: error.errors.map((e) => ({
             field: e.path.join('.'),
             message: e.message,

@@ -39,7 +39,9 @@ export function verifyToken(token: string): UserPayload | null {
 export async function createUser(name: string, email: string, passwordPlain: string) {
   const existing = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
   if (existing) {
-    throw new Error('An account with this email already exists.');
+    const error: any = new Error('An account with this email already exists. Please sign in instead.');
+    error.code = 'EMAIL_ALREADY_EXISTS';
+    throw error;
   }
 
   const passwordHash = await hashPassword(passwordPlain);
@@ -58,12 +60,16 @@ export async function createUser(name: string, email: string, passwordPlain: str
 export async function loginUser(email: string, passwordPlain: string) {
   const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
   if (!user) {
-    throw new Error('Invalid email or password.');
+    const error: any = new Error('User does not exist. Please sign up first.');
+    error.code = 'USER_NOT_FOUND';
+    throw error;
   }
 
   const isMatch = await comparePassword(passwordPlain, user.passwordHash);
   if (!isMatch) {
-    throw new Error('Invalid email or password.');
+    const error: any = new Error('Incorrect password. Please check your password and try again.');
+    error.code = 'INCORRECT_PASSWORD';
+    throw error;
   }
 
   return user;

@@ -66,10 +66,15 @@ authRouter.post('/signup', validateRequest(signupSchema), async (req: UserAuthen
       token,
     });
   } catch (err: any) {
+    const errCode = err.code || 'SIGNUP_FAILED';
+    let msg = err.message || 'Signup failed';
+    if (err.code === 'P2021' || err.code === 'P1001' || err.code === 'P1003') {
+      msg = 'Database tables not initialized. Please run prisma db push or check DATABASE_URL.';
+    }
     return res.status(400).json({
       success: false,
-      error: 'SIGNUP_FAILED',
-      message: err.message,
+      error: errCode,
+      message: msg,
     });
   }
 });
@@ -96,10 +101,16 @@ authRouter.post('/login', validateRequest(loginSchema), async (req: UserAuthenti
       token,
     });
   } catch (err: any) {
-    return res.status(401).json({
+    const errCode = err.code || 'LOGIN_FAILED';
+    const statusCode = errCode === 'USER_NOT_FOUND' ? 404 : 401;
+    let msg = err.message || 'Login failed';
+    if (err.code === 'P2021' || err.code === 'P1001' || err.code === 'P1003') {
+      msg = 'Database tables not initialized. Please run prisma db push or check DATABASE_URL.';
+    }
+    return res.status(statusCode).json({
       success: false,
-      error: 'LOGIN_FAILED',
-      message: err.message,
+      error: errCode,
+      message: msg,
     });
   }
 });

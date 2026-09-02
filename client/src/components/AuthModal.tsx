@@ -20,6 +20,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [errorCode, setErrorCode] = useState('');
 
   if (!isOpen) return null;
 
@@ -27,6 +28,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     e.preventDefault();
     setLoading(true);
     setErrorMsg('');
+    setErrorCode('');
 
     const endpoint = mode === 'signup' ? '/api/v1/auth/signup' : '/api/v1/auth/login';
     const bodyPayload = mode === 'signup' ? { name, email, password } : { email, password };
@@ -56,6 +58,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         onClose();
       } else {
         setErrorMsg(data.message || 'Authentication failed');
+        if (data.error) setErrorCode(data.error);
       }
     } catch (err: any) {
       setErrorMsg(err.message || 'Network error');
@@ -92,8 +95,26 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
         {/* Error Alert */}
         {errorMsg && (
-          <div className="bg-red-950/30 border border-red-800/50 rounded p-3 text-xs text-red-300 font-mono font-medium">
-            {errorMsg}
+          <div className="bg-red-950/30 border border-red-800/50 rounded p-3 text-xs text-red-300 font-mono font-medium space-y-1.5">
+            <p>{errorMsg}</p>
+            {(errorCode === 'USER_NOT_FOUND' || errorMsg.includes('User does not exist')) && (
+              <button
+                type="button"
+                onClick={() => { setMode('signup'); setErrorMsg(''); setErrorCode(''); }}
+                className="text-white underline font-semibold hover:text-zinc-200 block text-left"
+              >
+                Click here to Create an Account →
+              </button>
+            )}
+            {(errorCode === 'EMAIL_ALREADY_EXISTS' || errorMsg.includes('already exists')) && (
+              <button
+                type="button"
+                onClick={() => { setMode('login'); setErrorMsg(''); setErrorCode(''); }}
+                className="text-white underline font-semibold hover:text-zinc-200 block text-left"
+              >
+                Click here to Sign In →
+              </button>
+            )}
           </div>
         )}
 
