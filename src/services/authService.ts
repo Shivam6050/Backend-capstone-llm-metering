@@ -74,3 +74,41 @@ export async function loginUser(email: string, passwordPlain: string) {
 
   return user;
 }
+
+export async function loginOrRegisterWithGoogle(credentialToken?: string, googleEmail?: string, googleName?: string) {
+  let email = googleEmail;
+  let name = googleName;
+
+  if (credentialToken) {
+    try {
+      const decoded: any = jwt.decode(credentialToken);
+      if (decoded && decoded.email) {
+        email = decoded.email;
+        name = decoded.name || decoded.given_name || email?.split('@')[0];
+      }
+    } catch {
+      // Fallback to params
+    }
+  }
+
+  if (!email) {
+    throw new Error('Google Authentication failed: Could not retrieve email address.');
+  }
+
+  const cleanEmail = email.toLowerCase().trim();
+  let user = await prisma.user.findUnique({ where: { email: cleanEmail } });
+
+  if (!user) {
+    const randomPassword = `google_oauth_${Date.now()}_${Math.random().toString(36).substring(2)}`;
+    const passwordHash = await hashPassword(randomPassword);
+    user = await prisma.user.create({
+      data: {
+        name: name || cleanEmail.split('@')[0],
+        email: cleanEmail,
+        passwordHash,
+      },
+    });
+  }
+
+  return user;
+}

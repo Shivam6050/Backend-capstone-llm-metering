@@ -2,7 +2,7 @@ import { Router, Response } from 'express';
 import crypto from 'crypto';
 import { z } from 'zod';
 import { prisma, ensureDbInitialized } from '../db';
-import { createUser, loginUser, generateToken, hashPassword } from '../services/authService';
+import { createUser, loginUser, loginOrRegisterWithGoogle, generateToken, hashPassword } from '../services/authService';
 import { validateRequest } from '../middleware/validate';
 import { sendPasswordResetEmail } from '../services/emailService';
 import { requireUserAuth, UserAuthenticatedRequest } from '../middleware/authMiddleware';
@@ -111,6 +111,37 @@ authRouter.post('/login', validateRequest(loginSchema), async (req: UserAuthenti
       success: false,
       error: errCode,
       message: msg,
+    });
+  }
+});
+
+// Google Sign-In / Sign-Up Endpoint
+authRouter.post('/google', async (req: UserAuthenticatedRequest, res: Response) => {
+  try {
+    await ensureDbInitialized();
+    const { credential, email, name } = req.body;
+
+    const user = await loginOrRegisterWithGoogle(credential, email, name);
+    const tokenPayload = { userId: user.id, name: user.name, email: user.email };
+    const token = generateToken(tokenPayload);
+
+    res.cookie('token', token, COOKIE_OPTIONS);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Signed in with Google successfully',
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+      },
+      token,
+    });
+  } catch (err: any) {
+    return res.status(400).json({
+      success: false,
+      error: 'GOOGLE_AUTH_FAILED',
+      message: err.message || 'Google sign-in failed',
     });
   }
 });
