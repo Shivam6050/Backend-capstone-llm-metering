@@ -29,12 +29,17 @@
       "destination": "/api/index"
     },
     {
-      "source": "/webhook",
+      "source": "/webhooks/(.*)",
       "destination": "/api/index"
     },
     {
-      "source": "/((?!api|mcp|healthz|generate|usage|checkout|webhook).*)",
+      "source": "/webhook/(.*)",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/((?!api|mcp|healthz|generate|usage|checkout|webhook|webhooks).*)",
       "destination": "/index.html"
     }
   ]
 }
+
