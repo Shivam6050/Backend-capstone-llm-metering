@@ -59,44 +59,61 @@ async function handleBillableAction(req: AuthenticatedRequest, res: Response) {
     },
   });
 
-  // 2. If user is logged in, update matching user subscription in Prisma & clear cache
+  // 2. Identify authenticated user or active user subscription
+  let userId: string | null = null;
   let userToken = req.cookies?.token;
   if (!userToken && req.headers.authorization?.startsWith('Bearer ')) {
     userToken = req.headers.authorization.split(' ')[1];
   }
 
-  if (userToken && result.statusCode === 200 && !result.isDuplicate) {
+  if (userToken) {
     const userPayload = verifyToken(userToken);
     if (userPayload) {
-      const targetProvider = provider.toLowerCase();
-      const providerAliases = [
-        targetProvider,
-        targetProvider === 'gemini' ? 'google' : '',
-        targetProvider === 'google' ? 'gemini' : '',
-        targetProvider === 'claude' ? 'anthropic' : '',
-        targetProvider === 'anthropic' ? 'claude' : '',
-      ].filter(Boolean);
+      userId = userPayload.userId;
+    }
+  }
 
-      const userSub = await prisma.userSubscription.findFirst({
+  if (result.statusCode === 200 && !result.isDuplicate) {
+    const targetProvider = (provider || 'openai').toLowerCase();
+    const providerAliases = [
+      targetProvider,
+      targetProvider === 'gemini' ? 'google' : '',
+      targetProvider === 'google' ? 'gemini' : '',
+      targetProvider === 'claude' ? 'anthropic' : '',
+      targetProvider === 'anthropic' ? 'claude' : '',
+    ].filter(Boolean);
+
+    let userSub = null;
+    if (userId) {
+      userSub = await prisma.userSubscription.findFirst({
         where: {
-          userId: userPayload.userId,
+          userId,
           providerId: { in: providerAliases },
         },
       });
+    }
 
-      if (userSub) {
-        const tokensToAdd = totalReqTokens > 0 ? totalReqTokens : 1000;
-        await prisma.userSubscription.update({
-          where: { id: userSub.id },
-          data: {
-            tokensUsed: userSub.tokensUsed + tokensToAdd,
-            apiCallsUsed: userSub.apiCallsUsed + 1,
-            syncStatus: 'SYNCED',
-            lastSyncedAt: new Date(),
-          },
-        });
-        cacheService.delPattern(`user_subs_${userPayload.userId}`);
-      }
+    if (!userSub) {
+      userSub = await prisma.userSubscription.findFirst({
+        where: {
+          providerId: { in: providerAliases },
+        },
+        orderBy: { updatedAt: 'desc' },
+      });
+    }
+
+    if (userSub) {
+      const tokensToAdd = totalReqTokens > 0 ? totalReqTokens : 1800;
+      await prisma.userSubscription.update({
+        where: { id: userSub.id },
+        data: {
+          tokensUsed: userSub.tokensUsed + tokensToAdd,
+          apiCallsUsed: userSub.apiCallsUsed + 1,
+          syncStatus: 'SYNCED',
+          lastSyncedAt: new Date(),
+        },
+      });
+      cacheService.delPattern(`user_subs_${userSub.userId}`);
     }
   }
 

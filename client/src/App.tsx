@@ -139,6 +139,7 @@ export function App() {
       const res = await fetch('/api/v1/generate', {
         method: 'POST',
         headers,
+        credentials: 'include',
         body: JSON.stringify({
           provider: params.provider,
           prompt: params.prompt,

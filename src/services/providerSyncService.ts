@@ -154,7 +154,8 @@ export async function syncSubscriptionUsage(subscriptionId: string, userId?: str
       }
       const data: any = await resp.json();
       const modelCount = Array.isArray(data.models) ? data.models.length : 0;
-      syncMessage = `Google Gemini API verified (${modelCount} models available). Live telemetry synchronized.`;
+      tokensRemaining = Math.max(0, sub.monthlyTokenAllowance - sub.tokensUsed);
+      syncMessage = `Google Gemini API verified (${modelCount} models active). Live telemetry: ${sub.tokensUsed.toLocaleString()} tokens metered, ${tokensRemaining.toLocaleString()} remaining.`;
     } else {
       syncMessage = sub.providerName + ' credentials verified successfully.';
     }
