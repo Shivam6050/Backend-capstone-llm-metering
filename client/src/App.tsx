@@ -3,6 +3,7 @@ import { Header } from './components/Header';
 import { AuthModal } from './components/AuthModal';
 import { ForgotPasswordModal } from './components/ForgotPasswordModal';
 import { AddSubscriptionModal } from './components/AddSubscriptionModal';
+import { ApiKeyGuideModal } from './components/ApiKeyGuideModal';
 import { McpModal } from './components/McpModal';
 import { UsageAnalyticsGraph } from './components/UsageAnalyticsGraph';
 import { CostDistributionChart } from './components/CostDistributionChart';
@@ -12,7 +13,7 @@ import { BrandLogo } from './components/BrandLogos';
 import { PrivacyPolicyModal } from './components/PrivacyPolicyModal';
 import { TermsOfServiceModal } from './components/TermsOfServiceModal';
 import { ThreeHeroToken } from './components/ThreeHeroToken';
-import { Trash2, Zap, ShieldCheck, Layers, CheckCircle2, Terminal, Shield, CreditCard, Activity, RefreshCw } from 'lucide-react';
+import { Trash2, Zap, ShieldCheck, Layers, CheckCircle2, Terminal, Shield, CreditCard, Activity, RefreshCw, Key } from 'lucide-react';
 
 interface Subscription {
   id: string;
@@ -58,6 +59,7 @@ export function App() {
   const [syncingSubs, setSyncingSubs] = useState(false);
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
   const [isTermsOpen, setIsTermsOpen] = useState(false);
+  const [isApiKeyGuideOpen, setIsApiKeyGuideOpen] = useState(false);
 
   const [subsData, setSubsData] = useState<UserSubsData | null>(null);
   const [loadingSubs, setLoadingSubs] = useState(false);
@@ -220,6 +222,7 @@ export function App() {
         onOpenAuth={() => setIsAuthOpen(true)}
         onOpenAddSub={() => setIsAddSubOpen(true)}
         onOpenMcp={() => setIsMcpOpen(true)}
+        onOpenApiKeyGuide={() => setIsApiKeyGuideOpen(true)}
         onLogout={handleLogout}
       />
 
@@ -508,6 +511,14 @@ export function App() {
           <span className="hidden md:inline">Latency: <strong className="text-zinc-200">12ms</strong></span>
           <span>·</span>
           <button
+            onClick={() => setIsApiKeyGuideOpen(true)}
+            className="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors flex items-center space-x-1"
+          >
+            <Key className="w-3 h-3" />
+            <span>API Key & Security Guide</span>
+          </button>
+          <span>·</span>
+          <button
             onClick={() => setIsPrivacyOpen(true)}
             className="text-zinc-400 hover:text-white transition-colors"
           >
@@ -543,6 +554,27 @@ export function App() {
         isOpen={isAddSubOpen}
         onClose={() => setIsAddSubOpen(false)}
         onAdded={() => fetchUserSubscriptions(currentCurrency)}
+        onOpenApiKeyGuide={() => {
+          setIsAddSubOpen(false);
+          setIsApiKeyGuideOpen(true);
+        }}
+      />
+
+      <ApiKeyGuideModal
+        isOpen={isApiKeyGuideOpen}
+        onClose={() => setIsApiKeyGuideOpen(false)}
+        onSelectProvider={(providerId) => {
+          setIsApiKeyGuideOpen(false);
+          setIsAddSubOpen(true);
+        }}
+        onOpenTerms={() => {
+          setIsApiKeyGuideOpen(false);
+          setIsTermsOpen(true);
+        }}
+        onOpenPrivacy={() => {
+          setIsApiKeyGuideOpen(false);
+          setIsPrivacyOpen(true);
+        }}
       />
 
       <PrivacyPolicyModal isOpen={isPrivacyOpen} onClose={() => setIsPrivacyOpen(false)} />

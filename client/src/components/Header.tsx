@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, LogOut, LogIn, PlusCircle, Bell, Settings } from 'lucide-react';
+import { User, LogOut, LogIn, PlusCircle, Bell, Settings, Key } from 'lucide-react';
 import { CurrencySelector } from './CurrencySelector';
 import { ExportButtons } from './ExportButtons';
 
@@ -10,6 +10,7 @@ interface HeaderProps {
   onOpenAuth: () => void;
   onOpenAddSub: () => void;
   onOpenMcp: () => void;
+  onOpenApiKeyGuide?: () => void;
   onLogout: () => void;
 }
 
@@ -20,6 +21,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAuth,
   onOpenAddSub,
   onOpenMcp,
+  onOpenApiKeyGuide,
   onLogout,
 }) => {
   return (
@@ -48,6 +50,18 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* User Controls & Global Actions */}
         <div className="flex items-center space-x-2 sm:space-x-3">
+          {/* API Key Guide Button */}
+          {onOpenApiKeyGuide && (
+            <button
+              onClick={onOpenApiKeyGuide}
+              className="flex items-center space-x-1.5 bg-zinc-900/90 hover:bg-zinc-800 text-zinc-300 hover:text-white px-2.5 py-1.5 rounded border border-zinc-800 hover:border-zinc-700 text-xs font-mono font-semibold transition-all shadow-sm"
+              title="LLM API Key Access Guide & Security Terms"
+            >
+              <Key className="w-3.5 h-3.5 text-emerald-400" />
+              <span className="hidden sm:inline">API Key Guide</span>
+            </button>
+          )}
+
           {/* MCP Server Button */}
           <button
             onClick={onOpenMcp}

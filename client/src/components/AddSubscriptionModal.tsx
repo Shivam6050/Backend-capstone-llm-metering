@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { PlusCircle, X, DollarSign, Layers, Sparkles } from 'lucide-react';
+import { PlusCircle, X, DollarSign, Layers, Sparkles, Key } from 'lucide-react';
 import { BrandLogo } from './BrandLogos';
 
 interface AddSubscriptionModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAdded: () => void;
+  onOpenApiKeyGuide?: () => void;
 }
 
 const PRESET_PROVIDERS = [
@@ -21,6 +22,7 @@ export const AddSubscriptionModal: React.FC<AddSubscriptionModalProps> = ({
   isOpen,
   onClose,
   onAdded,
+  onOpenApiKeyGuide,
 }) => {
   const [selectedPreset, setSelectedPreset] = useState(PRESET_PROVIDERS[0]);
   const [customName, setCustomName] = useState('');
@@ -199,7 +201,16 @@ export const AddSubscriptionModal: React.FC<AddSubscriptionModalProps> = ({
               <label className="block text-xs font-mono font-semibold text-zinc-300">
                 Provider API Key <span className="text-zinc-500 font-normal">(Optional · for Real-Time Sync)</span>
               </label>
-              <span className="text-[10px] text-zinc-500 font-mono">🔒 AES-256-GCM Encrypted</span>
+              {onOpenApiKeyGuide && (
+                <button
+                  type="button"
+                  onClick={onOpenApiKeyGuide}
+                  className="text-[11px] text-emerald-400 hover:underline font-mono font-semibold flex items-center space-x-1"
+                >
+                  <Key className="w-3 h-3 text-emerald-400" />
+                  <span>How to get API Key?</span>
+                </button>
+              )}
             </div>
             <input
               type="password"
