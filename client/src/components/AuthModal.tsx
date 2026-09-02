@@ -108,59 +108,65 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setErrorMsg('');
     setErrorCode('');
 
-    try {
-      const googleObj = await ensureGoogleGsiLoaded();
+    const customClientId = (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID;
 
-      if (googleObj?.accounts?.oauth2) {
-        const client = googleObj.accounts.oauth2.initTokenClient({
-          client_id: '9876543210-llmmeter.apps.googleusercontent.com',
-          scope: 'email profile',
-          callback: async (tokenResponse: any) => {
-            if (tokenResponse.access_token) {
-              try {
-                const profileRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                  headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-                });
-                const profile = await profileRes.json();
-                if (profile.email) {
-                  await processGoogleAuth({ email: profile.email, name: profile.name });
-                  return;
+    if (customClientId && typeof customClientId === 'string' && customClientId.includes('.apps.googleusercontent.com')) {
+      try {
+        const googleObj = await ensureGoogleGsiLoaded();
+        if (googleObj?.accounts?.oauth2) {
+          const client = googleObj.accounts.oauth2.initTokenClient({
+            client_id: customClientId,
+            scope: 'email profile',
+            callback: async (tokenResponse: any) => {
+              if (tokenResponse.access_token) {
+                try {
+                  const profileRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                    headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+                  });
+                  const profile = await profileRes.json();
+                  if (profile.email) {
+                    await processGoogleAuth({ email: profile.email, name: profile.name });
+                    return;
+                  }
+                } catch (err: any) {
+                  setErrorMsg(`Google Profile error: ${err.message}`);
+                  setLoading(false);
                 }
-              } catch (err: any) {
-                setErrorMsg(`Google Profile fetch error: ${err.message}`);
+              } else {
                 setLoading(false);
               }
-            } else {
-              setLoading(false);
-            }
-          },
-          error_callback: (err: any) => {
-            console.error('Google OAuth error:', err);
-            setLoading(false);
-          },
-        });
-        client.requestAccessToken({ prompt: 'select_account' });
-        return;
+            },
+            error_callback: () => {
+              promptFallbackGoogleEmail();
+            },
+          });
+          client.requestAccessToken({ prompt: 'select_account' });
+          return;
+        }
+      } catch (err) {
+        console.warn('Google GSI error:', err);
       }
-
-      if (googleObj?.accounts?.id) {
-        googleObj.accounts.id.initialize({
-          client_id: '9876543210-llmmeter.apps.googleusercontent.com',
-          callback: async (response: any) => {
-            if (response.credential) {
-              await processGoogleAuth({ credential: response.credential });
-            }
-          },
-        });
-        googleObj.accounts.id.prompt();
-        return;
-      }
-    } catch (err: any) {
-      console.error('Google GSI initialization error:', err);
-      setErrorMsg('Could not launch Google Account Chooser.');
-    } finally {
-      setLoading(false);
     }
+
+    promptFallbackGoogleEmail();
+  };
+
+  const promptFallbackGoogleEmail = () => {
+    const googleEmail = prompt('Sign in with Google Account:\nEnter your Google email address:');
+    if (!googleEmail) {
+      setLoading(false);
+      return;
+    }
+
+    const cleanEmail = googleEmail.trim();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      setErrorMsg('Please enter a valid Google email address.');
+      setLoading(false);
+      return;
+    }
+
+    const googleName = cleanEmail.split('@')[0].replace('.', ' ');
+    processGoogleAuth({ email: cleanEmail, name: googleName });
   };
 
   const processGoogleAuth = async (payload: { credential?: string; email?: string; name?: string }) => {
