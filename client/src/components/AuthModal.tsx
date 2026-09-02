@@ -82,35 +82,85 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
+  const ensureGoogleGsiLoaded = (): Promise<any> => {
+    return new Promise((resolve) => {
+      if ((window as any).google?.accounts) {
+        resolve((window as any).google);
+        return;
+      }
+      const existingScript = document.getElementById('google-gsi-script');
+      if (existingScript) {
+        existingScript.addEventListener('load', () => resolve((window as any).google));
+        return;
+      }
+      const script = document.createElement('script');
+      script.id = 'google-gsi-script';
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      script.onload = () => resolve((window as any).google);
+      document.head.appendChild(script);
+    });
+  };
+
   const handleGoogleSignIn = async () => {
     setLoading(true);
     setErrorMsg('');
     setErrorCode('');
 
-    if ((window as any).google?.accounts?.id) {
-      try {
-        (window as any).google.accounts.id.initialize({
-          client_id: '9876543210-flyrank_demo.apps.googleusercontent.com',
+    try {
+      const googleObj = await ensureGoogleGsiLoaded();
+
+      if (googleObj?.accounts?.oauth2) {
+        const client = googleObj.accounts.oauth2.initTokenClient({
+          client_id: '9876543210-llmmeter.apps.googleusercontent.com',
+          scope: 'email profile',
+          callback: async (tokenResponse: any) => {
+            if (tokenResponse.access_token) {
+              try {
+                const profileRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                  headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+                });
+                const profile = await profileRes.json();
+                if (profile.email) {
+                  await processGoogleAuth({ email: profile.email, name: profile.name });
+                  return;
+                }
+              } catch (err: any) {
+                setErrorMsg(`Google Profile fetch error: ${err.message}`);
+                setLoading(false);
+              }
+            } else {
+              setLoading(false);
+            }
+          },
+          error_callback: (err: any) => {
+            console.error('Google OAuth error:', err);
+            setLoading(false);
+          },
+        });
+        client.requestAccessToken({ prompt: 'select_account' });
+        return;
+      }
+
+      if (googleObj?.accounts?.id) {
+        googleObj.accounts.id.initialize({
+          client_id: '9876543210-llmmeter.apps.googleusercontent.com',
           callback: async (response: any) => {
             if (response.credential) {
               await processGoogleAuth({ credential: response.credential });
             }
           },
         });
-        (window as any).google.accounts.id.prompt();
-      } catch {
-        // Fallback
+        googleObj.accounts.id.prompt();
+        return;
       }
-    }
-
-    const googleEmail = prompt('Enter your Google Account email address to sign in / register:');
-    if (!googleEmail) {
+    } catch (err: any) {
+      console.error('Google GSI initialization error:', err);
+      setErrorMsg('Could not launch Google Account Chooser.');
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const googleName = googleEmail.split('@')[0].replace('.', ' ');
-    await processGoogleAuth({ email: googleEmail, name: googleName });
   };
 
   const processGoogleAuth = async (payload: { credential?: string; email?: string; name?: string }) => {
