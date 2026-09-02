@@ -108,44 +108,46 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setErrorMsg('');
     setErrorCode('');
 
-    const customClientId = (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID;
+    const GOOGLE_CLIENT_ID =
+      (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID ||
+      '214519630977-9p6mdfthtb0db55vpk2ett5ch10l8tcs.apps.googleusercontent.com';
 
-    if (customClientId && typeof customClientId === 'string' && customClientId.includes('.apps.googleusercontent.com')) {
-      try {
-        const googleObj = await ensureGoogleGsiLoaded();
-        if (googleObj?.accounts?.oauth2) {
-          const client = googleObj.accounts.oauth2.initTokenClient({
-            client_id: customClientId,
-            scope: 'email profile',
-            callback: async (tokenResponse: any) => {
-              if (tokenResponse.access_token) {
-                try {
-                  const profileRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                    headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-                  });
-                  const profile = await profileRes.json();
-                  if (profile.email) {
-                    await processGoogleAuth({ email: profile.email, name: profile.name });
-                    return;
-                  }
-                } catch (err: any) {
-                  setErrorMsg(`Google Profile error: ${err.message}`);
-                  setLoading(false);
+    try {
+      const googleObj = await ensureGoogleGsiLoaded();
+
+      if (googleObj?.accounts?.oauth2) {
+        const client = googleObj.accounts.oauth2.initTokenClient({
+          client_id: GOOGLE_CLIENT_ID,
+          scope: 'email profile',
+          callback: async (tokenResponse: any) => {
+            if (tokenResponse.access_token) {
+              try {
+                const profileRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                  headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+                });
+                const profile = await profileRes.json();
+                if (profile.email) {
+                  await processGoogleAuth({ email: profile.email, name: profile.name });
+                  return;
                 }
-              } else {
+              } catch (err: any) {
+                setErrorMsg(`Google Profile error: ${err.message}`);
                 setLoading(false);
               }
-            },
-            error_callback: () => {
-              promptFallbackGoogleEmail();
-            },
-          });
-          client.requestAccessToken({ prompt: 'select_account' });
-          return;
-        }
-      } catch (err) {
-        console.warn('Google GSI error:', err);
+            } else {
+              setLoading(false);
+            }
+          },
+          error_callback: (err: any) => {
+            console.error('Google OAuth error:', err);
+            promptFallbackGoogleEmail();
+          },
+        });
+        client.requestAccessToken({ prompt: 'select_account' });
+        return;
       }
+    } catch (err) {
+      console.warn('Google GSI error:', err);
     }
 
     promptFallbackGoogleEmail();
