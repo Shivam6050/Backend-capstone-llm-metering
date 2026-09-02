@@ -15,6 +15,7 @@
 
 import winston from 'winston';
 import path from 'path';
+import fs from 'fs';
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -40,24 +41,32 @@ const transports: winston.transport[] = [
   }),
 ];
 
-if (isProduction) {
-  const logDir = path.join(process.cwd(), 'logs');
+// Only enable disk log files in traditional server environments (not Vercel/Lambda serverless)
+if (isProduction && !process.env.VERCEL && !process.env.LAMBDA_TASK_ROOT && !process.env.NOW_REGION) {
+  try {
+    const logDir = path.join(process.cwd(), 'logs');
+    if (!fs.existsSync(logDir)) {
+      fs.mkdirSync(logDir, { recursive: true });
+    }
 
-  transports.push(
-    new winston.transports.File({
-      filename: path.join(logDir, 'error.log'),
-      level: 'error',
-      format: jsonFormat,
-      maxsize: 10 * 1024 * 1024, // 10MB
-      maxFiles: 5,
-    }),
-    new winston.transports.File({
-      filename: path.join(logDir, 'combined.log'),
-      format: jsonFormat,
-      maxsize: 20 * 1024 * 1024, // 20MB
-      maxFiles: 10,
-    })
-  );
+    transports.push(
+      new winston.transports.File({
+        filename: path.join(logDir, 'error.log'),
+        level: 'error',
+        format: jsonFormat,
+        maxsize: 10 * 1024 * 1024, // 10MB
+        maxFiles: 5,
+      }),
+      new winston.transports.File({
+        filename: path.join(logDir, 'combined.log'),
+        format: jsonFormat,
+        maxsize: 20 * 1024 * 1024, // 20MB
+        maxFiles: 10,
+      })
+    );
+  } catch (err) {
+    // Read-only filesystem — fallback to console logging only
+  }
 }
 
 export const logger = winston.createLogger({

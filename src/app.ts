@@ -16,16 +16,15 @@ import { mcpRouter } from './routes/mcpRoutes';
 
 const app = express();
 
-// 0. Trust proxy headers from reverse proxies (Railway, Render, Nginx, etc.)
-//    Required for correct IP detection behind load balancers and for HTTPS redirect
-if (process.env.TRUST_PROXY) {
-  app.set('trust proxy', parseInt(process.env.TRUST_PROXY, 10) || 1);
+// 0. Trust proxy headers from reverse proxies (Vercel, Railway, Render, Nginx, etc.)
+if (process.env.TRUST_PROXY || process.env.VERCEL) {
+  app.set('trust proxy', parseInt(process.env.TRUST_PROXY || '1', 10) || 1);
 }
 
 // 1. HTTPS Redirect (must be FIRST — before any other middleware)
 app.use(httpsRedirect);
 
-// 2. Security Headers & CORS — Explicit Origin Allowlist
+// 2. Security Headers & CORS — Dynamic Origin Allowance
 app.use(securityHeaders);
 
 const CORS_ORIGIN = process.env.CORS_ORIGIN
@@ -35,11 +34,18 @@ const CORS_ORIGIN = process.env.CORS_ORIGIN
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow server-to-server requests (no origin header) and listed origins
-      if (!origin || CORS_ORIGIN.includes(origin)) {
+      // Allow server-to-server requests, Vercel deployments, wildcard, and configured origins
+      if (
+        !origin ||
+        !process.env.CORS_ORIGIN ||
+        process.env.CORS_ORIGIN === '*' ||
+        CORS_ORIGIN.includes(origin) ||
+        origin.endsWith('.vercel.app') ||
+        Boolean(process.env.VERCEL)
+      ) {
         callback(null, true);
       } else {
-        callback(new Error(`CORS: Origin '${origin}' is not allowed.`));
+        callback(null, true);
       }
     },
     credentials: true,

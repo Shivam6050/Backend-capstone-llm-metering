@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
 import crypto from 'crypto';
 import { z } from 'zod';
-import { prisma } from '../db';
+import { prisma, ensureDbInitialized } from '../db';
 import { createUser, loginUser, generateToken, hashPassword } from '../services/authService';
 import { validateRequest } from '../middleware/validate';
 import { sendPasswordResetEmail } from '../services/emailService';
@@ -47,6 +47,7 @@ const COOKIE_OPTIONS = {
 // Sign Up
 authRouter.post('/signup', validateRequest(signupSchema), async (req: UserAuthenticatedRequest, res: Response) => {
   try {
+    await ensureDbInitialized();
     const { name, email, password } = req.body;
     const user = await createUser(name, email, password);
     const tokenPayload = { userId: user.id, name: user.name, email: user.email };
@@ -76,6 +77,7 @@ authRouter.post('/signup', validateRequest(signupSchema), async (req: UserAuthen
 // Login
 authRouter.post('/login', validateRequest(loginSchema), async (req: UserAuthenticatedRequest, res: Response) => {
   try {
+    await ensureDbInitialized();
     const { email, password } = req.body;
     const user = await loginUser(email, password);
     const tokenPayload = { userId: user.id, name: user.name, email: user.email };

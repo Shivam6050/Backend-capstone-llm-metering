@@ -8,7 +8,7 @@ import { Request, Response, NextFunction } from 'express';
  * In development: passes through without redirect.
  */
 export function httpsRedirect(req: Request, res: Response, next: NextFunction): void {
-  if (process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production' || process.env.VERCEL) {
     return next();
   }
 

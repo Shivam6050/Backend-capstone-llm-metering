@@ -1,6 +1,6 @@
 import { Router, Response } from 'express';
 import { z } from 'zod';
-import { prisma } from '../db';
+import { prisma, ensureDbInitialized } from '../db';
 import { cacheService } from '../services/cacheService';
 import { requireUserAuth, UserAuthenticatedRequest } from '../middleware/authMiddleware';
 import { validateRequest } from '../middleware/validate';
@@ -24,6 +24,7 @@ const addSubscriptionSchema = z.object({
 // GET /api/v1/user/subscriptions (supports ?currency=USD|EUR|GBP|INR|JPY)
 userSubscriptionsRouter.get('/', requireUserAuth, async (req: UserAuthenticatedRequest, res: Response) => {
   try {
+    await ensureDbInitialized();
     const userId = req.user!.userId;
     const currency = ((req.query.currency as string) || 'USD').toUpperCase() as CurrencyCode;
     const cacheKey = `user_subs_${userId}_${currency}`;
