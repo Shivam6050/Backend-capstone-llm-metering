@@ -8,9 +8,9 @@ let schema = fs.readFileSync(schemaPath, 'utf8');
 const dbUrl = process.env.DATABASE_URL || '';
 let provider = 'sqlite';
 
-if (dbUrl.startsWith('postgresql://') || dbUrl.startsWith('postgres://') || process.env.VERCEL) {
+if (dbUrl.startsWith('postgresql://') || dbUrl.startsWith('postgres://')) {
   provider = 'postgresql';
-} else if (dbUrl.startsWith('file:') || dbUrl.startsWith('sqlite:')) {
+} else {
   provider = 'sqlite';
 }
 
