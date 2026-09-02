@@ -317,21 +317,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </div>
 
           <div>
-            <div className="flex justify-between items-center mb-1.5">
-              <label className="block text-xs font-mono font-semibold text-zinc-300">Password</label>
-              {mode === 'login' && onOpenForgotPassword && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    onClose();
-                    onOpenForgotPassword();
-                  }}
-                  className="text-[11px] text-zinc-400 hover:text-white hover:underline font-mono transition-colors"
-                >
-                  Forgot Password?
-                </button>
-              )}
-            </div>
+            <label className="block text-xs font-mono font-semibold text-zinc-300 mb-1.5">Password</label>
             <div className="relative">
               <Lock className="w-4 h-4 text-zinc-500 absolute left-3.5 top-3" />
               <input
@@ -343,6 +329,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 required
               />
             </div>
+            {mode === 'login' && onOpenForgotPassword && (
+              <div className="flex justify-end mt-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onOpenForgotPassword();
+                  }}
+                  className="text-[11px] text-zinc-400 hover:text-white hover:underline font-mono transition-colors"
+                >
+                  Forgot Password?
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Mandatory Terms & Privacy Checkboxes during Sign Up */}
