@@ -132,43 +132,38 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 }
               } catch (err: any) {
                 setErrorMsg(`Google Profile error: ${err.message}`);
-                setLoading(false);
               }
-            } else {
-              setLoading(false);
             }
+            setLoading(false);
           },
           error_callback: (err: any) => {
             console.error('Google OAuth error:', err);
-            promptFallbackGoogleEmail();
+            setErrorMsg('Google authentication was cancelled or could not be initialized.');
+            setLoading(false);
           },
         });
         client.requestAccessToken({ prompt: 'select_account' });
         return;
       }
-    } catch (err) {
-      console.warn('Google GSI error:', err);
-    }
 
-    promptFallbackGoogleEmail();
-  };
-
-  const promptFallbackGoogleEmail = () => {
-    const googleEmail = prompt('Sign in with Google Account:\nEnter your Google email address:');
-    if (!googleEmail) {
+      if (googleObj?.accounts?.id) {
+        googleObj.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: async (response: any) => {
+            if (response.credential) {
+              await processGoogleAuth({ credential: response.credential });
+            }
+          },
+        });
+        googleObj.accounts.id.prompt();
+        return;
+      }
+    } catch (err: any) {
+      console.error('Google GSI error:', err);
+      setErrorMsg('Could not launch Google Sign-In.');
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const cleanEmail = googleEmail.trim();
-    if (!cleanEmail || !cleanEmail.includes('@')) {
-      setErrorMsg('Please enter a valid Google email address.');
-      setLoading(false);
-      return;
-    }
-
-    const googleName = cleanEmail.split('@')[0].replace('.', ' ');
-    processGoogleAuth({ email: cleanEmail, name: googleName });
   };
 
   const processGoogleAuth = async (payload: { credential?: string; email?: string; name?: string }) => {
