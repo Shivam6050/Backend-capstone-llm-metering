@@ -543,6 +543,8 @@ export function App() {
           fetchUserSubscriptions(currentCurrency);
         }}
         onOpenForgotPassword={() => setIsForgotPasswordOpen(true)}
+        onOpenTerms={() => setIsTermsOpen(true)}
+        onOpenPrivacy={() => setIsPrivacyOpen(true)}
       />
 
       <ForgotPasswordModal

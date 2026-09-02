@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Lock, Mail, User, LogIn, UserPlus, ShieldCheck, X } from 'lucide-react';
+import { Lock, Mail, User, LogIn, UserPlus, ShieldCheck, X, FileText, Shield } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   onLoginSuccess: (user: { id: string; name: string; email: string }) => void;
   onOpenForgotPassword?: () => void;
+  onOpenTerms?: () => void;
+  onOpenPrivacy?: () => void;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
@@ -13,11 +15,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onClose,
   onLoginSuccess,
   onOpenForgotPassword,
+  onOpenTerms,
+  onOpenPrivacy,
 }) => {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [errorCode, setErrorCode] = useState('');
@@ -26,9 +32,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setErrorMsg('');
     setErrorCode('');
+
+    if (mode === 'signup') {
+      if (!acceptedTerms || !acceptedPrivacy) {
+        setErrorMsg('Please read the Terms of Service & Privacy Policy and check both agreement boxes to proceed with account creation.');
+        setErrorCode('AGREEMENT_REQUIRED');
+        return;
+      }
+    }
+
+    setLoading(true);
 
     const endpoint = mode === 'signup' ? '/api/v1/auth/signup' : '/api/v1/auth/login';
     const bodyPayload = mode === 'signup' ? { name, email, password } : { email, password };
@@ -179,6 +194,59 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               />
             </div>
           </div>
+
+          {/* Mandatory Terms & Privacy Checkboxes during Sign Up */}
+          {mode === 'signup' && (
+            <div className="space-y-2.5 pt-2 pb-2 border-t border-b border-zinc-800/80">
+              <label className="flex items-start space-x-2.5 cursor-pointer text-xs font-mono text-zinc-300 select-none">
+                <input
+                  type="checkbox"
+                  checked={acceptedTerms}
+                  onChange={(e) => {
+                    setAcceptedTerms(e.target.checked);
+                    if (e.target.checked && acceptedPrivacy) {
+                      setErrorMsg('');
+                    }
+                  }}
+                  className="mt-0.5 w-4 h-4 rounded border-zinc-800 bg-zinc-950 text-white focus:ring-zinc-700 cursor-pointer accent-white"
+                />
+                <span>
+                  I have read and agree to the{' '}
+                  <button
+                    type="button"
+                    onClick={() => onOpenTerms && onOpenTerms()}
+                    className="text-white underline font-semibold hover:text-zinc-300 transition-colors"
+                  >
+                    Terms of Service
+                  </button>
+                </span>
+              </label>
+
+              <label className="flex items-start space-x-2.5 cursor-pointer text-xs font-mono text-zinc-300 select-none">
+                <input
+                  type="checkbox"
+                  checked={acceptedPrivacy}
+                  onChange={(e) => {
+                    setAcceptedPrivacy(e.target.checked);
+                    if (e.target.checked && acceptedTerms) {
+                      setErrorMsg('');
+                    }
+                  }}
+                  className="mt-0.5 w-4 h-4 rounded border-zinc-800 bg-zinc-950 text-white focus:ring-zinc-700 cursor-pointer accent-white"
+                />
+                <span>
+                  I have read and agree to the{' '}
+                  <button
+                    type="button"
+                    onClick={() => onOpenPrivacy && onOpenPrivacy()}
+                    className="text-white underline font-semibold hover:text-zinc-300 transition-colors"
+                  >
+                    Privacy Policy
+                  </button>
+                </span>
+              </label>
+            </div>
+          )}
 
           <button
             type="submit"
