@@ -1,0 +1,47 @@
+# ─── Environment & Secrets ────────────────────────────────────────────────────
+.env
+.env.local
+.env.production
+.env.staging
+*.pem
+*.key
+*.cert
+
+# ─── Node ─────────────────────────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ─── TypeScript Build Output ──────────────────────────────────────────────────
+dist/
+build/
+
+# ─── Database ─────────────────────────────────────────────────────────────────
+prisma/dev.db
+prisma/dev.db-journal
+prisma/*.db
+*.sqlite
+*.sqlite3
+
+# ─── Frontend Build ───────────────────────────────────────────────────────────
+client/dist/
+client/node_modules/
+
+# ─── Logs ─────────────────────────────────────────────────────────────────────
+logs/
+*.log
+combined.log
+error.log
+
+# ─── OS / Editor ──────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ─── Testing ──────────────────────────────────────────────────────────────────
+coverage/
+.nyc_output/

@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flyrank_app
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+      - DATABASE_URL=file:/app/data/prod.db
+      - JWT_SECRET=c6a8f17e39b94e019b5d4389178ad9754402a7b8e1f0469b8214d0234a9b71e8
+      - ENCRYPTION_KEY=a7d3f9b2e8c14a5690b2184e9f3108c5
+      - CORS_ORIGIN=http://localhost:3000,http://localhost:5173
+      - TRUST_PROXY=1
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - app_data:/app/data
+    depends_on:
+      - redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  redis:
+    image: redis:7-alpine
+    container_name: flyrank_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+volumes:
+  app_data:
+  redis_data:

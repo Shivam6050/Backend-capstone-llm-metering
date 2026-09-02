@@ -1,0 +1,40 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": "client/dist",
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/mcp",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/healthz",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/generate",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/usage",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/checkout/(.*)",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/webhook",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/((?!api|mcp|healthz|generate|usage|checkout|webhook).*)",
+      "destination": "/index.html"
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  # ─── Job 1: Test & Build ─────────────────────────────────────────────────────
+  test-and-build:
+    name: Test & Build
+    runs-on: ubuntu-latest
+
+    env:
+      NODE_ENV: test
+      DATABASE_URL: file:./test.db
+      JWT_SECRET: ${{ secrets.JWT_SECRET || 'ci_test_jwt_secret_minimum_32_chars_long' }}
+      PORT: 3000
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install backend dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Push database schema
+        run: npx prisma db push
+
+      - name: Run backend tests
+        run: npm test
+
+      - name: Build backend (TypeScript → JS)
+        run: npm run build
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: client
+
+      - name: Build frontend (Vite)
+        run: npm run build
+        working-directory: client
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-build
+          path: |
+            dist/
+            client/dist/
+          retention-days: 7
+
+  # ─── Job 2: Security Audit ───────────────────────────────────────────────────
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    needs: test-and-build
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit (backend)
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: client
+
+      - name: Run npm audit (frontend)
+        run: npm audit --audit-level=high
+        continue-on-error: true
+        working-directory: client

@@ -1,0 +1,9 @@
+run: "npm start"
+seed: "npm run seed"
+test: "npm test"
+base_url: "http://localhost:3000"
+endpoints:
+  billable: "/generate"
+  usage: "/usage"
+  checkout: "/checkout/session"
+  webhook: "/webhooks/stripe"

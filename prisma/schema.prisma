@@ -1,0 +1,127 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id                String    @id @default(uuid())
+  name              String
+  email             String    @unique
+  passwordHash      String
+  resetToken        String?
+  resetTokenExpires DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  userSubscriptions UserSubscription[]
+}
+
+model UserSubscription {
+  id                    String    @id @default(uuid())
+  userId                String
+  providerId            String    // "openai" | "claude" | "groq" | "deepseek" | "gemini" | "custom"
+  providerName          String
+  planName              String
+  monthlyCostCents      Int       @default(0)
+  monthlyTokenAllowance Int       @default(1000000)
+  tokensUsed            Int       @default(0)
+  apiCallsUsed          Int       @default(0)
+  renewalDate           DateTime
+  encryptedApiKey       String?   // AES-256-GCM encrypted provider API key
+  lastSyncedAt          DateTime? // Timestamp of last real-time upstream sync
+  syncStatus            String?   @default("IDLE") // "IDLE" | "SYNCED" | "FAILED" | "NO_KEY"
+  balanceCents          Int?      // Real-time balance for balance-based LLMs (e.g. DeepSeek, OpenRouter)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, providerId])
+}
+
+model Plan {
+  id            String   @id // "Free" | "Pro"
+  name          String
+  apiCallsLimit Int
+  tokensLimit   Int
+  priceCents    Int
+  createdAt     DateTime @default(now())
+
+  tenants Tenant[]
+}
+
+model Tenant {
+  id               String   @id
+  name             String
+  email            String   @unique
+  planId           String
+  status           String   @default("active") // "active" | "past_due" | "canceled" | "unpaid"
+  stripeCustomerId String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  plan               Plan                @relation(fields: [planId], references: [id])
+  subscriptions      Subscription[]
+  usageEvents        UsageEvent[]
+  idempotencyRecords IdempotencyRecord[]
+}
+
+model Subscription {
+  id                   String   @id @default(uuid())
+  tenantId             String
+  stripeSubscriptionId String   @unique
+  stripePriceId        String
+  status               String   // "active" | "past_due" | "canceled" | "unpaid"
+  currentPeriodStart   DateTime
+  currentPeriodEnd     DateTime
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+}
+
+model UsageEvent {
+  id                String   @id @default(uuid())
+  tenantId          String
+  provider          String   @default("openai") // "openai" | "claude" | "groq" | "deepseek" | "gemini"
+  type              String   // "api_call" | "ai_tokens"
+  apiCallsCount     Int      @default(1)
+  inputTokens       Int      @default(0)
+  cachedInputTokens Int      @default(0)
+  outputTokens      Int      @default(0)
+  reasoningTokens   Int      @default(0)
+  totalTokens       Int      @default(0)
+  costMicroCents    Int      @default(0)
+  idempotencyKey    String?
+  createdAt         DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+}
+
+model IdempotencyRecord {
+  id           String   @id @default(uuid())
+  key          String
+  tenantId     String
+  endpoint     String
+  requestHash  String
+  statusCode   Int
+  responseBody String
+  createdAt    DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, key])
+}
+
+model ProcessedWebhookEvent {
+  id          String   @id
+  eventType   String
+  processedAt DateTime @default(now())
+}

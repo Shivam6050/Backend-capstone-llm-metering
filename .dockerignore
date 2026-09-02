@@ -1,0 +1,11 @@
+﻿node_modules
+client/node_modules
+dist
+client/dist
+.git
+.github
+*.log
+npm-debug.log*
+.env
+.DS_Store
+Thumbs.db
