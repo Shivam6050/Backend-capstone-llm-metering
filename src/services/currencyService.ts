@@ -27,7 +27,7 @@ export function convertUsdToCurrency(amountUsd: number, targetCurrency: Currency
   if (targetCurrency === 'JPY') {
     formatted = `${curr.symbol}${Math.round(convertedAmount).toLocaleString()}`;
   } else if (targetCurrency === 'INR') {
-    formatted = `${curr.symbol}${convertedAmount.toFixed(2)}`;
+    formatted = `${curr.symbol}${convertedAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   } else {
     formatted = `${curr.symbol}${convertedAmount.toFixed(2)}`;
   }

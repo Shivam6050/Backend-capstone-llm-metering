@@ -197,13 +197,13 @@ exportRouter.get('/invoice', requireUserAuth, async (req: UserAuthenticatedReque
     doc.moveTo(40, footerY).lineTo(555, footerY).strokeColor('#e4e4e7').lineWidth(1).stroke();
 
     doc.fillColor('#71717a').fontSize(8).font('Helvetica').text(
-      'Thank you for using FlyRank AI Metering & Billing Engine. This invoice is electronically issued and verified.',
+      'Thank you for using LLM Meter Engine. This invoice is electronically issued and verified.',
       40,
       footerY + 12,
       { align: 'center', width: 515 }
     );
     doc.fillColor('#a1a1aa').fontSize(7).font('Helvetica').text(
-      `Verification Hash: 0x${Buffer.from(invoiceNum + userId).toString('hex').slice(0, 32)} • Support: billing@flyrank.ai`,
+      `Verification Hash: 0x${Buffer.from(invoiceNum + userId).toString('hex').slice(0, 32)} • Support: support@llmmeter.ai`,
       40,
       footerY + 26,
       { align: 'center', width: 515 }
