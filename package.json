@@ -4,15 +4,15 @@
   "description": "Usage Metering & Billing Engine with idempotent tracking, quota enforcement, integer money math, Stripe integration, user auth, and multi-provider dashboard",
   "main": "dist/server.js",
   "scripts": {
-    "build:client": "npm install --prefix client && npm run build --prefix client",
+    "build:client": "npm install --prefix client --include=dev && npm run build --prefix client",
     "build:server": "tsc",
-    "build": "node scripts/prepare-db.js && prisma generate && npm install --prefix client && npm run build --prefix client && tsc",
+    "build": "node scripts/prepare-db.js && prisma generate && npm install --prefix client --include=dev && npm run build --prefix client && tsc",
     "start": "node dist/server.js",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "db:prepare": "node scripts/prepare-db.js",
     "db:push": "node scripts/prepare-db.js && prisma db push",
     "db:generate": "node scripts/prepare-db.js && prisma generate",
-    "postinstall": "node scripts/prepare-db.js && prisma generate && npm install --prefix client",
+    "postinstall": "node scripts/prepare-db.js && prisma generate && npm install --prefix client --include=dev",
     "seed": "ts-node src/scripts/seed.ts",
     "test": "vitest run"
   },
